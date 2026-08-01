@@ -9,7 +9,16 @@ import java.util.List;
 import java.util.ArrayList;
 import jakarta.annotation.PostConstruct;
 
-// @RestController tells Spring Boot: "This class handles internet traffic."
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+// @RestController tells Spring Boot: "This class handles internet traffic"
 @RestController
 // @RequestMapping("/api") means every web address in this file starts with /api
 @RequestMapping("/api")
@@ -37,6 +46,32 @@ public class SyncController {
         // We save the results into our permanent RAM variable.
         this.cachedServerMods = ServerScanner.scanModsFolder(masterFolder);
         System.out.println("CACHE READY: Saved " + cachedServerMods.size() + " mods into memory.");
+    }
+
+    // Lets the client download the mods
+    @GetMapping("/download/{filename}")
+    public ResponseEntity<Resource> downloadMod(@PathVariable String filename) {
+        
+        try {
+            // Get the servers master folder
+            String serverFolder = System.getProperty("user.home") + "/.modsync-server/master_mods/";
+            Path filePath = Paths.get(serverFolder).resolve(filename).normalize();
+            
+            // Turn the file into a Spring Resource
+            Resource resource = new UrlResource(filePath.toUri());
+            
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                                     .body(resource);
+
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     // The receptionist

@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
@@ -156,17 +157,45 @@ public class ModScanner {
                 
                 if (fileToDelete.exists()) {
                     if (fileToDelete.delete()) {
-                        System.out.println("Deleted unwanted mod: " + modName);
+                        System.out.println("- Deleted unwanted mod: " + modName);
                     } else {
-                        System.out.println("Failed to delete: " + modName + " (Is Minecraft running?)");
+                        System.out.println("- Failed to delete, is Minecraft running?)");
+                        break;
                     }
                 }
             }
 
             System.out.println("----------------------------\n");
 
-            // TODO: download mods
-            System.out.println("Need to download: " + syncData.getToDownload().size() + " files.");
+
+            System.out.println("\n--- PROCESSING DOWNLOADS ---");
+            for (String modName : syncData.getToDownload()) {
+                System.out.println("Downloading: " + modName + "...");
+                
+                // Target the new server endpoint
+                String downloadUrl = "http://localhost:8080/api/download/" + modName;
+                
+                HttpRequest downloadReq = HttpRequest.newBuilder()
+                                                     .uri(URI.create(downloadUrl))
+                                                     .GET()
+                                                     .build();
+                    
+                // Tells Java exactly where to save the file
+                java.nio.file.Path targetFile = java.nio.file.Paths.get(clientFolder + "/" + modName);
+                
+                // Send the request and save the body directly to the file
+                HttpResponse<Path> dlResponse = client.send(downloadReq, HttpResponse.BodyHandlers.ofFile(targetFile));
+                
+                if (dlResponse.statusCode() == 200) {
+                    System.out.println("- Successfully downloaded: " + modName);
+                } else {
+                    System.out.println("- Failed to download: " + modName + " (Server returned code: " + dlResponse.statusCode() + ")");
+                }
+            }
+
+            System.out.println("----------------------------\n");
+            System.out.println("Sync Complete! Modpack is ready.");
+
             
         } catch (Exception e) {
 
