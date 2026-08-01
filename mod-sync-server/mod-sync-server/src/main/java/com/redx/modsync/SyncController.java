@@ -41,9 +41,10 @@ public class SyncController {
 
     // The receptionist
     @PostMapping("/sync")
-    public List<String> receiveClientMods(@RequestBody Map<String,String> clientMods) {
+    public SyncResponse receiveClientMods(@RequestBody Map<String,String> clientMods) {
         
-        List<String> modsToDownload = new ArrayList<>();
+        List<String> downloadList = new ArrayList<>();
+        List<String> deleteList = new ArrayList<>();
 
         // We look at every single mod cacheServerMods has
         for (Map.Entry<String,String> serverMod : cachedServerMods.entrySet()) {
@@ -53,16 +54,23 @@ public class SyncController {
             // If the client does NOT have the mod, or the hashes do not match
             if (!clientMods.containsKey(modName) || !clientMods.get(modName).equals(serverHash)) {
                 // Add it to the download list
-                modsToDownload.add(modName);
+                downloadList.add(modName);
             }
         }
 
-        if (modsToDownload.size() == 1){
-            System.out.println("Client needs " + modsToDownload.size() + " update.");
+        // Looks at which mods to delete
+        for (String clientModName : clientMods.keySet()) {
+            if (!cachedServerMods.containsKey(clientModName)) {
+                deleteList.add(clientModName);
+            }
+        }
+
+        if (downloadList.size() == 1){
+            System.out.println("Client needs " + (downloadList.size() + deleteList.size())  + " update.");
         } else {
-            System.out.println("Client needs " + modsToDownload.size() + " updates.");
+            System.out.println("Client needs " + (downloadList.size() + deleteList.size()) + " updates.");
         }
         
-        return modsToDownload;
+        return new SyncResponse(downloadList, deleteList);
     }
 }

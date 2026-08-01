@@ -35,7 +35,7 @@ public class ModScanner {
         return sb.toString();
     }
 
-    // It looks at a folder, finds only the .jar files, and hashes them.
+    // It looks at a folder, finds only the .jar files, and hashes them
     public static Map<String, String> scanModsFolder(String folderPath) {
         // This is our dictionary that will hold key = "FileName", value = "Hash"
         Map<String, String> localMods = new HashMap<>();
@@ -110,10 +110,10 @@ public class ModScanner {
         System.out.println("\nScan complete! Found " + localState.size() + " mods.");
 
         // Create the Gson tool
-        Gson gson = new Gson();
+        Gson gsonMessage = new Gson();
 
         // Convert our dictionary into a JSON string
-        String jsonOutput = gson.toJson(localState);
+        String jsonOutput = gsonMessage.toJson(localState);
 
         System.out.println("\nHere is the JSON ready for the server:");
         System.out.println(jsonOutput);
@@ -121,29 +121,57 @@ public class ModScanner {
         // Send the data to the server
         String serverUrl = "http://localhost:8080/api/sync"; 
 
-        // Create the "Mailman" that will deliver our request.
+        // Create the "Mailman" that will deliver our request
         HttpClient client = HttpClient.newHttpClient();
 
-        // Build the actual request (The Address, the Label, and the Letter).
+        // Build the actual request (The Address, the Label, and the Letter)
         HttpRequest request = HttpRequest.newBuilder()
                                          .uri(URI.create(serverUrl))
                                          .header("Content-Type", "application/json")
                                          .POST(HttpRequest.BodyPublishers.ofString(jsonOutput))
                                          .build();
 
-        // Try to send the request and wait for the server to reply.
+        // Try to send the request and wait for the server to reply
         try {
             System.out.println("\nSending data to the server...");
             
-            // This sends the data and saves whatever the server says back.
+            // This sends the data and saves whatever the server says back
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            String responseBody = response.body(); 
             
             System.out.println("The server replied with code: " + response.statusCode());
             System.out.println("Server message: " + response.body());
+
+            // The next part of the code is breaking the code 
+            // Use Gson to instantly convert the JSON text into our Java object
+            com.google.gson.Gson gsonAnswer = new com.google.gson.Gson();
+            SyncResponse syncData = gsonAnswer.fromJson(responseBody, SyncResponse.class);
+
+            // Process Deletions
+            System.out.println("\n--- PROCESSING DELETIONS ---");
+            String clientFolder = getMinecraftModsFolder(); // Using your new dynamic path
+
+            for (String modName : syncData.getToDelete()) {
+                java.io.File fileToDelete = new java.io.File(clientFolder + "/" + modName);
+                
+                if (fileToDelete.exists()) {
+                    if (fileToDelete.delete()) {
+                        System.out.println("Deleted unwanted mod: " + modName);
+                    } else {
+                        System.out.println("Failed to delete: " + modName + " (Is Minecraft running?)");
+                    }
+                }
+            }
+
+            System.out.println("----------------------------\n");
+
+            // TODO: download mods
+            System.out.println("Need to download: " + syncData.getToDownload().size() + " files.");
             
         } catch (Exception e) {
+
             // If the server is offline or doesn't exist yet, we catch the error here so the app doesn't crash.
-            System.out.println("Could not connect to the server. It might be offline.");
+            System.out.println("Could not connect to the server. It might be offline.\n" + e);
         }
     }
 }
