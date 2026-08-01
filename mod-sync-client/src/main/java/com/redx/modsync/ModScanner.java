@@ -71,11 +71,38 @@ public class ModScanner {
         return localMods;
     }
 
+    // Checks what type of OS the user has 
+    public static String getMinecraftModsFolder() {
+        String os = System.getProperty("os.name").toLowerCase();
+        String userHome = System.getProperty("user.home");
+        String mcFolder;
+
+        if (os.contains("win")) {
+            // On Windows, Minecraft hides in the AppData folder
+            String appData = System.getenv("APPDATA");
+            mcFolder = (appData != null ? appData : userHome) + "/.minecraft";
+        } else if (os.contains("mac")) {
+            // On Mac, it hides in Application Support
+            mcFolder = userHome + "/Library/Application Support/minecraft";
+        } else {
+            // On Linux, it sits right in the home directory
+            mcFolder = userHome + "/.minecraft";
+        }
+        
+        return mcFolder + "/mods";
+    }
+
     public static void main(String[] args) {
         
-        // Dynamically gets the users path
-        String userHome = System.getProperty("user.home");
-        String clientModsFolder = userHome + "/.modsync-client/mods";
+        // Get the real Minecraft mods folder based on their OS
+        String clientModsFolder = getMinecraftModsFolder();
+
+        // they installed Forge but haven't run it yet to generate the mods folder
+        java.io.File directory = new java.io.File(clientModsFolder);
+        if (!directory.exists()) {
+            directory.mkdirs();
+            System.out.println("Created missing mods folder at: " + clientModsFolder);
+        }
         
         System.out.println("Starting folder scan...");
         Map<String, String> localState = scanModsFolder(clientModsFolder);
