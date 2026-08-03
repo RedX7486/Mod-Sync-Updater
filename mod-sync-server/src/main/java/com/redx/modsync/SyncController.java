@@ -22,10 +22,9 @@ import java.nio.file.Paths;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.Files;
+
 
 // @RestController tells Spring Boot: "This class handles internet traffic"
 @RestController
