@@ -199,8 +199,9 @@ public class ModScanner {
             
         } catch (Exception e) {
 
-            // If the server is offline or doesn't exist yet, we catch the error here so the app doesn't crash.
+            // If the server is offline or doesn't exist yet, we catch the error here so the app doesn't crash
             System.out.println("Could not connect to the server. It might be offline.\n" + e);
+            System.out.println("ERROR: " + e);
         }
     }
 }

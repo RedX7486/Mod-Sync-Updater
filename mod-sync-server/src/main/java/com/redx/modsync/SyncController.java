@@ -12,11 +12,20 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 // @RestController tells Spring Boot: "This class handles internet traffic"
 @RestController
@@ -26,6 +35,71 @@ public class SyncController {
 
     // This is our cache
     private Map<String,String> cachedServerMods;
+    private final AdminController adminController;
+
+    // Spring Boot automatically provides the adminController when it builds this class
+    public SyncController(AdminController adminController) {
+        this.adminController = adminController;
+    }
+
+    // Lets the admins of the mod pack upload mods
+    @PostMapping("/admin/upload")
+    public ResponseEntity<String> uploadMasterMod(@RequestHeader("X-Admin-Token") String token,
+                                                  @RequestParam("file") MultipartFile file) {
+        
+        // Security Check via AdminController
+        if (!adminController.isAuthorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access Denied: Invalid Admin Token!");
+        }
+
+        try {
+            // Save the uploaded file
+            String serverFolder = System.getProperty("user.home") + "/.modsync-server/master_mods/";
+            Path targetPath = Paths.get(serverFolder).resolve(file.getOriginalFilename()).normalize();
+            
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Admin uploaded: " + file.getOriginalFilename());
+            
+            initializeCache();
+            
+            return ResponseEntity.ok("File securely uploaded to server!");
+            
+        } catch (Exception e) {
+            System.out.println("Upload failed: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Server failed to save the file.");
+        }
+    }
+
+    // Lets the admins delete files of the mod pack
+    @PostMapping("/admin/delete/{filename}")
+    public ResponseEntity<String> deleteMasterMod(@RequestHeader("X-Admin-Token") String token,
+                                                  @PathVariable String filename) {
+        
+        if (!adminController.isAuthorized(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Access Denied: Invalid Admin Token!");
+        }
+
+        try {
+            String serverFolder = System.getProperty("user.home") + "/.modsync-server/master_mods/";
+            java.io.File fileToDelete = new java.io.File(serverFolder + filename);
+            
+            if (fileToDelete.exists() && fileToDelete.delete()) {
+                System.out.println("Admin deleted mod: " + filename);
+                
+                initializeCache();
+                
+                return ResponseEntity.ok("Deleted successfully.");
+            }
+            return ResponseEntity.notFound().build();
+            
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+
+
 
     // This runs when the server boots up
     @PostConstruct
@@ -108,4 +182,6 @@ public class SyncController {
         
         return new SyncResponse(downloadList, deleteList);
     }
+
+
 }
