@@ -37,6 +37,22 @@
       <artifactId>okhttp</artifactId>
       <version>4.12.0</version>
     </dependency>
+
+    
+    <!-- The core UI controls -->
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-controls</artifactId>
+        <version>21.0.1</version>
+    </dependency>
+    
+    <!-- The FXML parser for your layout -->
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-fxml</artifactId>
+        <version>21.0.1</version>
+    </dependency>
+  
     
   </dependencies>
 
@@ -84,5 +100,17 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <plugins>
+        <plugin>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-maven-plugin</artifactId>
+            <version>0.0.8</version>
+            <configuration>
+                <!-- TODO: Replace with the name of your main launch class -->
+                <mainClass>com.redx.modsync.Main</mainClass>
+            </configuration>
+        </plugin>
+    </plugins>
   </build>
 </project>
