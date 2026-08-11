@@ -12,8 +12,12 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class ClientsViewController {
+public class AdminsViewController {
 
     @FXML
     private ListView<String> pendingUploadsList;

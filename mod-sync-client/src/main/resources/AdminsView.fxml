@@ -8,19 +8,21 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.redx.modsync.ClientsViewController" prefWidth="800" prefHeight="600">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.redx.modsync.AdminsViewController" prefWidth="800" prefHeight="600">
     
     <center>
         <HBox spacing="20">
             <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
             
             <VBox HBox.hgrow="ALWAYS" spacing="10">
-                <Label text="Pending Uploads (Drag &amp; Drop .jar files here)" style="-fx-font-weight: bold;"/>
+                <Label text="Pending Uploads (Drag &amp; Drop .jar files here)" 
+                       style="-fx-font-weight: bold; -fx-text-fill: white;"/>
                 <ListView fx:id="pendingUploadsList" VBox.vgrow="ALWAYS" />
             </VBox>
 
             <VBox HBox.hgrow="ALWAYS" spacing="10">
-                <Label text="Live Server Mods" style="-fx-font-weight: bold;"/>
+                <Label text="Live Server Mods" 
+                       style="-fx-font-weight: bold; -fx-text-fill: white;"/>
                 <ListView fx:id="serverModsList" VBox.vgrow="ALWAYS" />
             </VBox>
         </HBox>
@@ -29,9 +31,10 @@
     <bottom>
         <HBox alignment="CENTER">
             <padding><Insets top="10" right="20" bottom="20" left="20"/></padding>
-            <Button fx:id="pushChangesButton" text="Push Changes to Server" 
-                    style="-fx-background-color: #2e8b57; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10 20 10 20;"
-                    onAction="#handlePushChanges"/>
+            <Button fx:id="pushChangesButton" 
+                       text="Push Changes to Server" 
+                       style="-fx-background-color: #2e8b57; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-padding: 10 20 10 20;"
+                       onAction="#handlePushChanges"/>
         </HBox>
     </bottom>
 

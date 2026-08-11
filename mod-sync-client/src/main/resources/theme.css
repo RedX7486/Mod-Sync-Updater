@@ -1,0 +1,36 @@
+/* 1. Target the main background of the entire window */
+.root {
+    -fx-background-color: #121212;
+    background-color: #333333;
+}
+
+/* 2. Style the background of the ListView component itself */
+.list-view {
+    -fx-background-color: #121212;
+    -fx-control-inner-background: #121212;
+    -fx-border-color: grey;
+    -fx-border-width: 1;
+
+    background-color: #333333;
+    border-color: grey;
+    border-width: 1; 
+}
+
+/* 3. Style the individual rows (cells) */
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 12px;
+
+    background-color: #333333;
+    padding: 12px;
+}
+
+/* 4. Customize the rows when hovered over */
+.list-cell:hover {
+    -fx-background-color: #333333;
+    -fx-cursor: hand;
+
+    background-color: #333333;
+    cursor: hand;
+}
