@@ -3,6 +3,8 @@ package com.redx.modsync;
 import okhttp3.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdminUploader {
 
@@ -82,4 +84,40 @@ public class AdminUploader {
             return false;
         }
     }
+
+    // Gets the currents mods in the mod pack from the server
+    public static List<String> getServerMods() {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                                     .url("http://localhost:8080/mods") // TODO: Change this to the actual one latter
+                                     .get()
+                                     .build();
+
+        List<String> modList = new ArrayList<>();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                String responseBody = response.body().string();
+                
+                // Quick way to parse a simple JSON array 
+                responseBody = responseBody.replace("[", "").replace("]", "").replace("\"", "");
+                
+                if (!responseBody.trim().isEmpty()) {
+                    String[] mods = responseBody.split(",");
+                    for (String mod : mods) {
+                        modList.add(mod.trim());
+                    }
+                }
+
+            } else {
+                System.out.println("Failed to fetch mods. Server said: " + response.code());
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Network error fetching mods: " + e.getMessage());
+        }
+        
+        return modList;
+    }
+
 }

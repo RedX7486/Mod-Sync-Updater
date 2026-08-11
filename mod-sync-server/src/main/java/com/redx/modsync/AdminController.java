@@ -25,6 +25,8 @@ public class AdminController {
         if (!file.exists()) {
             // First-time setup: If the file doesn't exist, create it with a default master password
             List<String> defaultAdmins = new ArrayList<>();
+
+            // TODO: Change the password to the users password
             defaultAdmins.add("master-password-123");
             saveAdmins(defaultAdmins);
             System.out.println("- Created default admins.json! Master password is: master-password-123");

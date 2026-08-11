@@ -29,6 +29,13 @@ public class AdminsViewController {
     private Button pushChangesButton;
 
     @FXML
+    private javafx.scene.control.PasswordField adminTokenField;
+
+    // We use these to remember the data behind the UI
+    private final Map<String, String> pendingPaths = new HashMap<>();
+    private final List<String> modsToDelete = new ArrayList<>();
+
+    @FXML
     public void initialize() {
         setupDragAndDrop();
         setupCustomCells();
@@ -62,8 +69,13 @@ public class AdminsViewController {
                 success = true;
                 for (File file : db.getFiles()) {
                     if (file.getName().endsWith(".jar") && !pendingUploadsList.getItems().contains(file.getName())) {
+                        
                         // We store just the file name now so the UI looks cleaner
                         pendingUploadsList.getItems().add(file.getName());
+    
+                        // Remembers the actual path for OkHttp
+                        pendingPaths.put(file.getName(), file.getAbsolutePath());
+
                     }
                 }
             }
@@ -74,13 +86,50 @@ public class AdminsViewController {
     }
 
     private void loadServerMods() {
-        // TODO: Hook this up to the actual server sync logic next
-        serverModsList.getItems().add("Example_Mod_v1.jar");
+        serverModsList.getItems().clear();
+        
+        // Fetch the live list from the Spring Boot server
+        List<String> liveMods = AdminUploader.getServerMods();
+        
+        // Populate the JavaFX list
+        for (String mod : liveMods) {
+            serverModsList.getItems().add(mod);
+        }
     }
 
+
+    // This sends the mods to the server and updates the servers mods
     @FXML
     private void handlePushChanges() {
-        System.out.println("Pushing " + pendingUploadsList.getItems().size() + " mods to server...");
+        String token = adminTokenField.getText();
+
+        if (token == null || token.isEmpty()) {
+            System.out.println("Error: Please enter the admin password!");
+            return;
+        }
+
+        System.out.println("Executing Push Changes to Server...");
+
+        // Execute Deletions
+        for (String filename : modsToDelete) {
+            System.out.println("Deleting: " + filename);
+            AdminUploader.deleteMod(filename, token);
+        }
+
+        // Execute Uploads
+        for (String filename : pendingUploadsList.getItems()) {
+            String fullPath = pendingPaths.get(filename);
+            System.out.println("Uploading: " + filename);
+            AdminUploader.uploadMod(fullPath, token);
+        }
+
+        // Clean up the UI after a successful sync
+        pendingUploadsList.getItems().clear();
+        pendingPaths.clear();
+        modsToDelete.clear();
+        
+        // Reload the right column to prove the server updated
+        loadServerMods(); 
     }
 
     /**
@@ -113,8 +162,21 @@ public class AdminsViewController {
                 actionButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #cc0000; -fx-font-weight: bold;");
                 
                 actionButton.setOnAction(event -> {
-                    // Mark the server mod visually for pending deletion
+                    String item = getItem();
+
+                    // Toggle logic: add/remove from the deletion list if they click it multiple times
+                    if (!modsToDelete.contains(item)) {
+                        modsToDelete.add(item);
+
+                        // Mark the server mod visually for pending deletion
                     modName.setStyle("-fx-strikethrough: true; -fx-text-fill: red;");
+
+                    } else {
+                        modsToDelete.remove(item);
+                        modName.setStyle("");
+
+                    }
+
                 });
             }
             
@@ -132,8 +194,10 @@ public class AdminsViewController {
             } else {
                 modName.setText(item);
                 
-                // Reset styles when scrolling so JavaFX recycles cells correctly
-                if (!actionButton.getText().equals("Delete") || !modName.getStyle().contains("strikethrough")) {
+                // Ensure the red strikethrough stays if scrolling off-screen
+                if (modsToDelete.contains(item)) {
+                    modName.setStyle("-fx-strikethrough: true; -fx-text-fill: red;");
+                } else {
                     modName.setStyle("");
                 }
                 
